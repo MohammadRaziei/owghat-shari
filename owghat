@@ -4,8 +4,11 @@ import requests
 from selectolax.parser import HTMLParser
 from unidecode import unidecode
 import pandas as pd
+import time
 import typer
 from typing import Dict, List
+from rich import print as rprint
+
 
 
 
@@ -21,10 +24,10 @@ class OwghatBase:
         oogat_times = list(self.dict_data.values())
         tp.table([oogat_times], headers)
         
+        
     def print_as_dict(self):
         # from pprint import pprint
-        from rich import print as pprint
-        pprint(self.dict_data)
+        rprint(self.dict_data)
         
 
 class Owghat_time_ir(OwghatBase):
@@ -32,12 +35,14 @@ class Owghat_time_ir(OwghatBase):
     
     def __init__(self):
         super().__init__()
+        self._get_tree()
         self.get_data()
-    
-    def get_data(self):
-        content = requests.get(self.url)
-        tree = HTMLParser(content.text)
         
+    def _get_tree(self):
+        content = requests.get(self.url)
+        self.tree = HTMLParser(content.text)
+    
+    def get_data(self):        
         oogat_span_root = "#ctl00_cphTop_Sampa_Web_View_EphemerisUI_EphemerisByCity12cphTop_3736_lbl"
         oogat_map = zip(["AzanMorning", "AzanSunrise", "AzanNoon", 
                               "AzanSunset", "AzanNight", "MidNight"], self.headers)
@@ -45,16 +50,35 @@ class Owghat_time_ir(OwghatBase):
         all_oogat = dict()
         for oogat_str, oogat_key in oogat_map:
             oogat_id = oogat_span_root + oogat_str
-            oogat_time = unidecode(tree.css(oogat_id)[0].text())
+            oogat_time = unidecode(self.tree.css(oogat_id)[0].text())
             all_oogat[oogat_key] = oogat_time
         self.dict_data = all_oogat
         return all_oogat
     
+    def get_date(self):
+        shamsi_id = "#ctl00_cphTop_Sampa_Web_View_TimeUI_ShowDate00cphTop_3734_lblShamsiNumeral"
+        return unidecode(self.tree.css(shamsi_id)[0].text())
+    
+    def get_time(self):
+        return unidecode(self.tree.css("#digitalClock")[0].text())
+    
+    
+    def print_as_complete(self):
+        from rich_tools import df_to_table
+        from rich.table import Table
+        dt = self.get_date()
+        t = time.strftime("%H:%M:%S")
+        table = Table(title="Salah Times - {} {}".format(dt, t))
+        df = pd.DataFrame([self.dict_data])
+        table = df_to_table(df, table, show_index=False)
+        rprint(table)
+        
+        
 
         
 
 
-valid_names = ["dict", "table"]
+valid_names = ["dict", "table", "complete"]
 def complete_name(incomplete: str):
     completion = []
     for name in valid_names:
@@ -66,13 +90,15 @@ def complete_name(incomplete: str):
 
 
 def main(show_as : str = typer.Option(
-        "table", help="Choose the way of display output [dict, table]", autocompletion=complete_name)
+        "complete", help="Choose the way of display output [dict, complete, table]", autocompletion=complete_name)
         ):
     owghat = Owghat_time_ir()
     if show_as == "dict" :
         owghat.print_as_dict()
     if show_as == "table":
         owghat.print_as_table()
+    if show_as == "complete":
+        owghat.print_as_complete()
 
 
 if __name__ == "__main__":
