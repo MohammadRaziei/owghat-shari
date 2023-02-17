@@ -5,12 +5,15 @@ from selectolax.parser import HTMLParser
 from unidecode import unidecode
 import pandas as pd
 import typer
+from typing import Dict, List
 
 
 
 class OwghatBase:
     def __init__(self):
-        self.dict_data : dict = dict()
+        self.dict_data : Dict[str, str] = dict()
+        self.headers : List[str]=  ["Morning Azan", "Sunrise", "Noon Azan", 
+                                    "Sunset", "Night Azan", "Mid-night"]
     
     def print_as_table(self):
         import tableprint as tp
@@ -36,11 +39,14 @@ class Owghat_time_ir(OwghatBase):
         tree = HTMLParser(content.text)
         
         oogat_span_root = "#ctl00_cphTop_Sampa_Web_View_EphemerisUI_EphemerisByCity12cphTop_3736_lbl"
+        oogat_map = zip(["AzanMorning", "AzanSunrise", "AzanNoon", 
+                              "AzanSunset", "AzanNight", "MidNight"], self.headers)
+        
         all_oogat = dict()
-        for oogat_str in ["AzanMorning", "AzanSunrise", "AzanNoon", "AzanSunset", "AzanNight", "MidNight"]:
+        for oogat_str, oogat_key in oogat_map:
             oogat_id = oogat_span_root + oogat_str
             oogat_time = unidecode(tree.css(oogat_id)[0].text())
-            all_oogat[oogat_str] = oogat_time
+            all_oogat[oogat_key] = oogat_time
         self.dict_data = all_oogat
         return all_oogat
     
