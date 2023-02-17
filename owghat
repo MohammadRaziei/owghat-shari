@@ -29,6 +29,17 @@ class OwghatBase:
         # from pprint import pprint
         rprint(self.dict_data)
         
+    def print_as_complete(self):
+        from rich_tools import df_to_table
+        from rich.table import Table
+        dt = self.get_date()
+        t = time.strftime("%H:%M:%S")
+        table = Table(title="Salah Times - {} {}".format(dt, t))
+        df = pd.DataFrame([self.dict_data])
+        table = df_to_table(df, table, show_index=False)
+        rprint(table)
+        
+        
 
 class Owghat_time_ir(OwghatBase):
     url = "https://time.ir"
@@ -60,16 +71,6 @@ class Owghat_time_ir(OwghatBase):
         return unidecode(self.tree.css(shamsi_id)[0].text())
     
     
-    def print_as_complete(self):
-        from rich_tools import df_to_table
-        from rich.table import Table
-        dt = self.get_date()
-        t = time.strftime("%H:%M:%S")
-        table = Table(title="Salah Times - {} {}".format(dt, t))
-        df = pd.DataFrame([self.dict_data])
-        table = df_to_table(df, table, show_index=False)
-        rprint(table)
-        
         
 
         
