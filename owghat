@@ -59,9 +59,6 @@ class Owghat_time_ir(OwghatBase):
         shamsi_id = "#ctl00_cphTop_Sampa_Web_View_TimeUI_ShowDate00cphTop_3734_lblShamsiNumeral"
         return unidecode(self.tree.css(shamsi_id)[0].text())
     
-    def get_time(self):
-        return unidecode(self.tree.css("#digitalClock")[0].text())
-    
     
     def print_as_complete(self):
         from rich_tools import df_to_table
